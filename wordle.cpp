@@ -14,11 +14,12 @@ using namespace std;
 
 // Add prototypes of helper functions here
 void helper(
-    std::string& current,
+    const string& in,
+    string current,
     int index,
-    std::string floating,
-    const std::set<std::string>& dict,
-    std::set<std::string>& result
+    string floating,
+    const set<string>& dict,
+    set<string>& answers
 );
 
 
@@ -29,56 +30,70 @@ std::set<std::string> wordle(
     const std::set<std::string>& dict)
 {
     // Add your code here
-    set<string> result;
-
+    set<string> answers;
     string current = in;
 
-    helper(current, 0, floating, dict, result);
+    helper(in, current, 0, floating, dict, answers);
 
-    return result;
+    return answers;
+
 }
 
 // Define any helper functions here
 void helper(
-    string& current,
+    const string& in,
+    string current,
     int index,
     string floating,
     const set<string>& dict,
-    set<string>& result
+    set<string>& answers
 )
 {
     //base case
-    if(index == (int)current.size())
+    if(index == (int)in.size())
     {
         if(floating.empty() && dict.find(current) != dict.end())
         {
-            result.insert(current);
+            answers.insert(current);
         }
         return;
     }
 
-    //fixed letter case
-    if(current[index] != '-')
+    //fixed letter
+    if(in[index] != '-')
     {
-        helper(current, index + 1, floating, dict, result);
-        return;
+        current[index] = in[index];
+        helper(in, current, index + 1, floating, dict, answers);
     }
-
-    //try all letters
-    for(char c = 'a'; c <= 'z'; c++)
+    else
     {
-        string newFloating = floating;
-
-        size_t pos = newFloating.find(c);
-        if(pos != string::npos)
+        //count remaining blanks
+        int blanks = 0;
+        for(int i = index; i < (int)in.size(); i++)
         {
-            newFloating.erase(pos, 1);
+            if(in[i] == '-') blanks++;
         }
 
-        current[index] = c;
+        for(char c = 'a'; c <= 'z'; c++)
+        {
+            current[index] = c;
 
-        helper(current, index + 1, newFloating, dict, result);
+            string newFloating = floating;
 
-        current[index] = '-'; // backtrack
+            size_t pos = floating.find(c);
+            if(pos != string::npos)
+            {
+                newFloating.erase(pos, 1);
+            }
+            else
+            {
+                if((int)floating.size() == blanks)
+                {
+                    continue;
+                }
+            }
+
+            helper(in, current, index + 1, newFloating, dict, answers);
+        }
     }
 }
